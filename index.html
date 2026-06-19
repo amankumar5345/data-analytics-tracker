@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Placement Sprint — Data Analyst Tracker</title>
+<meta name="description" content="A self-contained progress tracker for the NIT Rourkela Data Analyst placement prep roadmap." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1320;
+    --panel:#121C2E;
+    --panel-2:#16223A;
+    --border:#223149;
+    --text:#E7ECF5;
+    --muted:#8A97AC;
+    --amber:#F2A93B;
+    --cyan:#49D3C4;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+  a{color:var(--cyan); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* Topbar */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding:14px 24px;
+    background:rgba(11,19,32,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex; flex-direction:column; gap:2px;}
+  .brand .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; color:var(--amber); text-transform:uppercase;}
+  .brand h1{font-size:16px; margin:0; font-weight:600;}
+  .topbar-right{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .day-badge{
+    font-size:12px; letter-spacing:.05em;
+    background:var(--panel-2); border:1px solid var(--border);
+    padding:7px 12px; border-radius:20px; color:var(--muted); white-space:nowrap;
+  }
+  .day-badge strong{color:var(--text);}
+  .gauge-wrap{position:relative; width:48px; height:48px; flex-shrink:0;}
+  .gauge-wrap svg{transform:rotate(-90deg); display:block;}
+  .gauge-track{fill:none; stroke:var(--border); stroke-width:6;}
+  .gauge-fill{fill:none; stroke:var(--amber); stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset .6s ease;}
+  .gauge-pct{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:var(--text);
+  }
+  .reset-btn{
+    font-size:11px; letter-spacing:.05em;
+    background:transparent; border:1px solid var(--border); color:var(--muted);
+    padding:8px 12px; border-radius:6px; cursor:pointer;
+  }
+  .reset-btn:hover{border-color:var(--cyan); color:var(--cyan);}
+
+  /* Hero */
+  .hero{max-width:920px; margin:0 auto; padding:56px 24px 24px;}
+  .hero .eyebrow{font-size:12px; letter-spacing:.15em; color:var(--cyan); text-transform:uppercase;}
+  .hero h2{font-size:clamp(28px,4vw,42px); margin:10px 0 12px; font-weight:700; letter-spacing:-0.01em;}
+  .hero p{color:var(--muted); max-width:640px; font-size:15px;}
+  .hero-bar-wrap{margin-top:28px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px;}
+  .hero-bar-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .hero-bar-top .label{font-size:11px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase;}
+  .hero-bar-top .pct{font-size:24px; font-weight:800; color:var(--amber);}
+  .bar-track{height:10px; background:var(--panel-2); border-radius:6px; overflow:hidden; border:1px solid var(--border);}
+  .bar-fill{height:100%; background:linear-gradient(90deg, var(--amber), var(--cyan)); width:0%; transition:width .6s ease; border-radius:6px;}
+
+  /* Phases */
+  .phases{max-width:920px; margin:0 auto; padding:8px 24px 80px; display:flex; flex-direction:column; gap:18px;}
+  .phase{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;}
+  .phase-header{display:flex; align-items:center; gap:16px; padding:18px 20px; border-bottom:1px solid var(--border); flex-wrap:wrap;}
+  .phase-num{font-size:12px; color:var(--bg); background:var(--amber); width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;}
+  .phase-titles{flex:1; min-width:180px;}
+  .phase-titles h3{margin:0; font-size:15px; font-weight:600;}
+  .phase-titles .days{font-size:11px; color:var(--muted); margin-top:2px;}
+  .phase-progress{display:flex; align-items:center; gap:10px; min-width:140px;}
+  .phase-progress .mini-track{width:90px; height:6px; background:var(--panel-2); border-radius:4px; overflow:hidden; border:1px solid var(--border);}
+  .phase-progress .mini-fill{height:100%; background:var(--cyan); width:0%; transition:width .5s ease; display:block;}
+  .phase-progress .frac{font-size:11px; color:var(--muted); white-space:nowrap;}
+
+  .items{list-style:none; margin:0; padding:6px 8px;}
+  .item{display:flex; align-items:flex-start; gap:12px; padding:12px; border-radius:8px;}
+  .item:hover{background:var(--panel-2);}
+  .item input[type=checkbox]{width:19px; height:19px; margin-top:2px; accent-color:var(--amber); cursor:pointer; flex-shrink:0;}
+  .item-body{flex:1; min-width:0;}
+  .item-title-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .item-title{font-size:14px; font-weight:600; cursor:pointer;}
+  .item.done .item-title{color:var(--muted); text-decoration:line-through; text-decoration-color:var(--border);}
+  .item-desc{font-size:13px; color:var(--muted); margin-top:3px;}
+  .item-desc a{color:var(--cyan);}
+  .item-link{font-size:11px; display:inline-flex; align-items:center; gap:4px; margin-top:6px;}
+  .tag{font-size:10px; letter-spacing:.05em; text-transform:uppercase; padding:2px 8px; border-radius:10px; border:1px solid var(--border); color:var(--muted); white-space:nowrap;}
+  .tag.core{color:var(--amber); border-color:var(--amber);}
+  .tag.practice{color:var(--cyan); border-color:var(--cyan);}
+  .tag.project{background:var(--amber); color:var(--bg); border-color:var(--amber);}
+  .tag.setup, .tag.maintain, .tag.stretch{color:var(--muted); border-style:dashed;}
+
+  footer{max-width:920px; margin:0 auto; padding:0 24px 60px; color:var(--muted); font-size:12px;}
+  footer code{background:var(--panel-2); padding:2px 6px; border-radius:4px;}
+
+  :focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+  @media (max-width:640px){
+    .topbar{padding:12px 16px;}
+    .hero{padding:36px 16px 16px;}
+    .phases{padding:8px 16px 60px;}
+    .phase-header{padding:14px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar mono">
+  <div class="brand">
+    <span class="eyebrow">Mission: get placed</span>
+    <h1>Data Analyst Placement Sprint</h1>
+  </div>
+  <div class="topbar-right">
+    <span class="day-badge" id="dayBadge">DAY 1 / 30</span>
+    <div class="gauge-wrap">
+      <svg width="48" height="48" viewBox="0 0 48 48">
+        <circle class="gauge-track" cx="24" cy="24" r="18"></circle>
+        <circle class="gauge-fill" id="gaugeFill" cx="24" cy="24" r="18"></circle>
+      </svg>
+      <div class="gauge-pct" id="gaugePct">0%</div>
+    </div>
+    <button class="reset-btn" id="resetBtn" type="button">RESET</button>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="eyebrow mono">NIT Rourkela · Placement Track</span>
+  <h2>From zero to interview-ready.</h2>
+  <p>Every resource from your roadmap, in order. Check things off as you go — progress saves automatically in this browser. No login, no server, nothing leaves this page.</p>
+  <div class="hero-bar-wrap">
+    <div class="hero-bar-top">
+      <span class="label mono">Overall progress</span>
+      <span class="pct mono" id="overallPctText">0%</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="overallBar"></div></div>
+  </div>
+</section>
+
+<main class="phases" id="phasesRoot"></main>
+
+<footer class="mono">
+  Progress lives in this browser's <code>localStorage</code> only — per device, never uploaded anywhere. Clearing site data resets it; use the RESET button only when you actually want to start over. Edit the <code>PHASES</code> array near the bottom of this file to add, remove, or re-order resources — the page rebuilds itself from that data.
+</footer>
+
+<script>
+const PHASES = [
+  {
+    title: "Setup",
+    days: "Day 0",
+    items: [
+      { id:"p0-1", title:"Install MySQL Workbench", desc:"Free local database client for SQL practice.", link:"https://dev.mysql.com/downloads/workbench/", linkLabel:"Download", tag:"SETUP" },
+      { id:"p0-2", title:"Install Anaconda (Python + Jupyter)", desc:"Gives you Python, pandas, numpy and Jupyter Notebook in one install.", link:"https://www.anaconda.com/download", linkLabel:"Download", tag:"SETUP" },
+      { id:"p0-3", title:"Install Power BI Desktop", desc:"Free, Windows only — use a VM or a friend's laptop if you're on Mac/Linux.", link:"https://www.microsoft.com/en-us/power-platform/products/power-bi/downloads", linkLabel:"Download", tag:"SETUP" },
+      { id:"p0-4", title:"Install VS Code", desc:"Code editor for your Python and SQL work.", link:"https://code.visualstudio.com/", linkLabel:"Download", tag:"SETUP" },
+      { id:"p0-5", title:"Create a GitHub account", desc:"You'll push your portfolio projects here from Phase 5 onward.", link:"https://github.com/", linkLabel:"Sign up", tag:"SETUP" }
+    ]
+  },
+  {
+    title: "Excel + SQL Foundations",
+    days: "Days 1–6",
+    items: [
+      { id:"p1-1", title:"Alex The Analyst — Data Analyst Bootcamp (Excel section)", desc:"Pivot tables, VLOOKUP/XLOOKUP, nested IF, data cleaning, conditional formatting.", link:"https://www.youtube.com/playlist?list=PLUaB-1hjhk8FE_XZ87vPPSfHqb6OcM0cF", linkLabel:"Watch playlist", tag:"CORE" },
+      { id:"p1-2", title:"Alex The Analyst — Data Analyst Bootcamp (SQL fundamentals section)", desc:"SELECT/WHERE/GROUP BY/HAVING, all JOIN types, subqueries, CTEs, CASE statements.", link:"https://www.youtube.com/playlist?list=PLUaB-1hjhk8FE_XZ87vPPSfHqb6OcM0cF", linkLabel:"Watch playlist", tag:"CORE" },
+      { id:"p1-3", title:"Luke Barousse — SQL for Data Analytics (4 hrs)", desc:"SQL built specifically for analyst/reporting use cases, not SWE-style.", link:"https://www.youtube.com/watch?v=7mz73uXD9DA", linkLabel:"Watch video", tag:"CORE" },
+      { id:"p1-4", title:"Kaggle — Intro to SQL", desc:"Free interactive course using real-world datasets.", link:"https://www.kaggle.com/learn/intro-to-sql", linkLabel:"Start course", tag:"PRACTICE" },
+      { id:"p1-5", title:"LeetCode SQL", desc:"Work through Easy → Medium problems daily.", link:"https://leetcode.com/problemset/database/", linkLabel:"Practice", tag:"PRACTICE" },
+      { id:"p1-6", title:"HackerRank SQL", desc:"More free query practice across difficulty levels.", link:"https://www.hackerrank.com/domains/sql", linkLabel:"Practice", tag:"PRACTICE" }
+    ]
+  },
+  {
+    title: "Advanced SQL + Statistics",
+    days: "Days 7–14",
+    items: [
+      { id:"p2-1", title:"Ankit Bansal — Window functions & scenario-based SQL", desc:"An Amazon data engineer's channel: RANK/ROW_NUMBER/LAG/LEAD, duplicates, nth-highest problems, query optimization.", link:"https://www.youtube.com/@ankitbansal6", linkLabel:"Open channel", tag:"CORE" },
+      { id:"p2-2", title:"techTFQ — SQL + interview prep", desc:"SQL, Python and database concepts taught with an interview-prep lens.", link:"https://www.youtube.com/channel/UCnz-ZXXER4jOvuED5trXfEA", linkLabel:"Open channel", tag:"CORE" },
+      { id:"p2-3", title:"StatQuest — Statistics Fundamentals playlist", desc:"Distributions, p-values, hypothesis testing, confidence intervals — explained simply.", link:"https://www.youtube.com/playlist?list=PLblh5JKOoLUIcdlgu78MnlATeyx4cEVeR", linkLabel:"Watch playlist", tag:"CORE" },
+      { id:"p2-4", title:"Khan Academy — Statistics & Probability", desc:"Slow down here whenever StatQuest moves too fast for a concept.", link:"https://www.khanacademy.org/math/statistics-probability", linkLabel:"Start course", tag:"CORE" },
+      { id:"p2-5", title:"DataLemur — 40 Probability & Stats interview questions", desc:"Real questions asked at Amazon, Meta and Wall Street firms, with solutions.", link:"https://www.nicksingh.com/posts/40-probability-statistics-data-science-interview-questions-asked-by-fang-wall-street", linkLabel:"Read & solve", tag:"PRACTICE" }
+    ]
+  },
+  {
+    title: "Python + Power BI",
+    days: "Days 15–21",
+    items: [
+      { id:"p3-1", title:"Keith Galli — Pandas + plotting (matplotlib/seaborn)", desc:"DataFrames, filtering, groupby, merging, datetime, lambda/apply, then basic charts. Also browse his channel for the pandas interview-question walkthroughs.", link:"https://www.youtube.com/@KeithGalli", linkLabel:"Open channel", tag:"CORE" },
+      { id:"p3-2", title:"codebasics — Power BI (Sales Insights project)", desc:"An end-to-end Power BI project using real sales data — doubles as a portfolio piece.", link:"https://www.youtube.com/playlist?list=PLeo1K3hjS3uva8pk1FI3iK9kCOKQdz1I9", linkLabel:"Watch playlist", tag:"PROJECT" },
+      { id:"p3-3", title:"codebasics channel", desc:"Browse for any specific Power BI / SQL / Python concept you get stuck on.", link:"https://www.youtube.com/@codebasics", linkLabel:"Open channel", tag:"PRACTICE" }
+    ]
+  },
+  {
+    title: "Case Studies, Guesstimates, Product Sense",
+    days: "Days 22–26",
+    items: [
+      { id:"p4-1", title:"The Data Monk — case studies & guesstimates", desc:"Built specifically around Indian product-company interviews: Flipkart case studies, guesstimates, business-metrics frameworks.", link:"https://thedatamonk.com/", linkLabel:"Open site", tag:"CORE" },
+      { id:"p4-2", title:"Drill core business metrics cold", desc:"Conversion rate, CAC, LTV, churn, retention/cohort analysis, funnel drop-off, revenue per user — be able to define and decompose each instantly.", tag:"CORE" },
+      { id:"p4-3", title:"Daily: 1 guesstimate + 1 business case, out loud", desc:"Structure → state assumptions → segment → estimate → sanity-check → tie back to a business decision. Record yourself if practicing alone.", tag:"PRACTICE" }
+    ]
+  },
+  {
+    title: "Projects, Resume, Mock Interviews",
+    days: "Days 27–30",
+    items: [
+      { id:"p5-1", title:"Alex The Analyst — Portfolio Projects playlist", desc:"Real datasets, explored and explained end-to-end.", link:"https://www.youtube.com/playlist?list=PLUaB-1hjhk8H48Pj32z4GZgGWyylqv85f", linkLabel:"Watch playlist", tag:"PROJECT" },
+      { id:"p5-2", title:"Build + push a SQL/Python EDA project to GitHub", desc:"Pick a Kaggle dataset, write a clean README — this becomes your 'tell me about a project' answer.", tag:"PROJECT" },
+      { id:"p5-3", title:"Build + push a Power BI dashboard project to GitHub", desc:"Screenshot the finished dashboard directly in the README.", tag:"PROJECT" },
+      { id:"p5-4", title:"Prepare 5 STAR stories", desc:"Map each to a Leadership Principle (Customer Obsession, Ownership, Dive Deep, etc.) with a number in the Result.", tag:"CORE" },
+      { id:"p5-5", title:"DataLemur — timed mock SQL practice", desc:"Explain your approach out loud before typing a single line.", link:"https://datalemur.com/sql-tutorial", linkLabel:"Practice", tag:"PRACTICE" }
+    ]
+  },
+  {
+    title: "Placement Season Maintenance",
+    days: "Months 2–4 · ongoing",
+    items: [
+      { id:"p6-1", title:"Daily: 3–4 SQL problems + 1 stats/guesstimate question", desc:"Skills decay fast under interview pressure — don't stop once you actually start interviewing.", tag:"MAINTAIN" },
+      { id:"p6-2", title:"Research each company before its interview", desc:"Search &quot;[Company] Data Analyst interview experience&quot; on <a href=\"https://www.glassdoor.co.in\" target=\"_blank\" rel=\"noopener\">Glassdoor</a> and <a href=\"https://www.geeksforgeeks.org\" target=\"_blank\" rel=\"noopener\">GeeksforGeeks</a> — patterns repeat heavily.", tag:"MAINTAIN" },
+      { id:"p6-3", title:"Stretch: build one agentic AI / LLM-powered data project", desc:"E.g. a natural-language-to-SQL agent over a sample dataset — a strong differentiator for your resume's projects section once core prep is solid.", tag:"STRETCH" }
+    ]
+  }
+];
+
+function render(){
+  const root = document.getElementById('phasesRoot');
+  root.innerHTML = PHASES.map((phase, pi) => `
+    <section class="phase">
+      <div class="phase-header">
+        <div class="phase-num mono">${String(pi).padStart(2,'0')}</div>
+        <div class="phase-titles">
+          <h3>${phase.title}</h3>
+          <div class="days mono">${phase.days}</div>
+        </div>
+        <div class="phase-progress">
+          <div class="mini-track"><span class="mini-fill" id="mini-${pi}"></span></div>
+          <span class="frac mono" id="frac-${pi}">0/${phase.items.length}</span>
+        </div>
+      </div>
+      <ul class="items">
+        ${phase.items.map(item => `
+          <li class="item" id="row-${item.id}">
+            <input type="checkbox" data-id="${item.id}" id="cb-${item.id}" />
+            <div class="item-body">
+              <div class="item-title-row">
+                <label for="cb-${item.id}" class="item-title">${item.title}</label>
+                <span class="tag ${item.tag.toLowerCase()}">${item.tag}</span>
+              </div>
+              ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
+              ${item.link ? `<a class="item-link mono" href="${item.link}" target="_blank" rel="noopener">→ ${item.linkLabel || 'Open resource'}</a>` : ''}
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+    </section>
+  `).join('');
+}
+
+function loadState(){
+  document.querySelectorAll('input[type=checkbox][data-id]').forEach(cb => {
+    const key = 'pst_item_' + cb.dataset.id;
+    cb.checked = localStorage.getItem(key) === '1';
+    const row = document.getElementById('row-' + cb.dataset.id);
+    if(row) row.classList.toggle('done', cb.checked);
+    cb.addEventListener('change', () => {
+      localStorage.setItem(key, cb.checked ? '1' : '0');
+      if(row) row.classList.toggle('done', cb.checked);
+      updateProgress();
+    });
+  });
+}
+
+function updateProgress(){
+  let totalDone = 0, totalAll = 0;
+  PHASES.forEach((phase, pi) => {
+    let done = 0;
+    phase.items.forEach(item => {
+      const cb = document.getElementById('cb-' + item.id);
+      if(cb && cb.checked) done++;
+    });
+    totalDone += done; totalAll += phase.items.length;
+    const pct = phase.items.length ? (done / phase.items.length * 100) : 0;
+    const mini = document.getElementById('mini-' + pi);
+    const frac = document.getElementById('frac-' + pi);
+    if(mini) mini.style.width = pct + '%';
+    if(frac) frac.textContent = `${done}/${phase.items.length}`;
+  });
+  const overallPct = totalAll ? (totalDone / totalAll * 100) : 0;
+  document.getElementById('overallBar').style.width = overallPct + '%';
+  document.getElementById('overallPctText').textContent = Math.round(overallPct) + '%';
+  setGauge(overallPct);
+}
+
+function setGauge(pct){
+  const r = 18;
+  const c = 2 * Math.PI * r;
+  const fill = document.getElementById('gaugeFill');
+  fill.style.strokeDasharray = `${c}`;
+  fill.style.strokeDashoffset = `${c * (1 - pct / 100)}`;
+  document.getElementById('gaugePct').textContent = Math.round(pct) + '%';
+}
+
+function setupDayBadge(){
+  const KEY = 'pst_startDate';
+  let start = localStorage.getItem(KEY);
+  if(!start){
+    start = new Date().toISOString().slice(0,10);
+    localStorage.setItem(KEY, start);
+  }
+  const sd = new Date(start + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.floor((today - sd) / 86400000) + 1;
+  const badge = document.getElementById('dayBadge');
+  badge.textContent = diff > 30 ? `DAY ${diff} · SPRINT OVER, KEEP GOING` : `DAY ${Math.max(diff,1)} / 30`;
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(confirm('Reset all checked progress and restart the Day counter from today? This cannot be undone.')){
+    Object.keys(localStorage).forEach(k => { if(k.startsWith('pst_')) localStorage.removeItem(k); });
+    location.reload();
+  }
+});
+
+render();
+loadState();
+updateProgress();
+setupDayBadge();
+</script>
+</body>
+</html>
